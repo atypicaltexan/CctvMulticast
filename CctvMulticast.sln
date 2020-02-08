@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29728.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CctvMulticastViewer", "CctvMulticastViewer\CctvMulticastViewer.csproj", "{FDD2D3C2-7130-4CF0-905C-80161BD53AD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CctvMulticastService", "CctvMulticastService\CctvMulticastService.csproj", "{E0D6A65E-A284-45F0-A81F-24A27BDD6BBB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FDD2D3C2-7130-4CF0-905C-80161BD53AD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDD2D3C2-7130-4CF0-905C-80161BD53AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDD2D3C2-7130-4CF0-905C-80161BD53AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDD2D3C2-7130-4CF0-905C-80161BD53AD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0D6A65E-A284-45F0-A81F-24A27BDD6BBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0D6A65E-A284-45F0-A81F-24A27BDD6BBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0D6A65E-A284-45F0-A81F-24A27BDD6BBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0D6A65E-A284-45F0-A81F-24A27BDD6BBB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DD4484CD-3064-42D5-81BA-2CF327FB8D34}
+	EndGlobalSection
+EndGlobal

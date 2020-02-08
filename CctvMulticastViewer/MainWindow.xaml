@@ -1,0 +1,50 @@
+﻿<Window x:Class="CctvMulticastViewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CctvMulticastViewer"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Image x:Name="img11" Grid.Column="0" Grid.Row="0" />
+        <Image x:Name="img12" Grid.Column="0" Grid.Row="1" />
+        <Image x:Name="img13" Grid.Column="0" Grid.Row="2" />
+        <Image x:Name="img14" Grid.Column="0" Grid.Row="3" />
+        <Image x:Name="img15" Grid.Column="0" Grid.Row="4" />
+        <Image x:Name="img21" Grid.Column="1" Grid.Row="0" />
+        <Image x:Name="img22" Grid.Column="1" Grid.Row="1" />
+        <Image x:Name="img23" Grid.Column="1" Grid.Row="2" />
+        <Image x:Name="img24" Grid.Column="1" Grid.Row="3" />
+        <Image x:Name="img25" Grid.Column="1" Grid.Row="4" />
+        <Image x:Name="img31" Grid.Column="2" Grid.Row="0" />
+        <Image x:Name="img32" Grid.Column="2" Grid.Row="1" />
+        <Image x:Name="img33" Grid.Column="2" Grid.Row="2" />
+        <Image x:Name="img34" Grid.Column="2" Grid.Row="3" />
+        <Image x:Name="img35" Grid.Column="2" Grid.Row="4" />
+        <Image x:Name="img41" Grid.Column="3" Grid.Row="0" />
+        <Image x:Name="img42" Grid.Column="3" Grid.Row="1" />
+        <Image x:Name="img43" Grid.Column="3" Grid.Row="2" />
+        <Image x:Name="img44" Grid.Column="3" Grid.Row="3" />
+        <Image x:Name="img45" Grid.Column="3" Grid.Row="4" />
+        <Image x:Name="img51" Grid.Column="4" Grid.Row="0" />
+        <Image x:Name="img52" Grid.Column="4" Grid.Row="1" />
+        <Image x:Name="img53" Grid.Column="4" Grid.Row="2" />
+        <Image x:Name="img54" Grid.Column="4" Grid.Row="3" />
+        <Image x:Name="img55" Grid.Column="4" Grid.Row="4" />
+    </Grid>
+</Window>
