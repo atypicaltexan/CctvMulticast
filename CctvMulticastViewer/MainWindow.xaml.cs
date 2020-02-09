@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CctvMulticastViewer.Models;
+using System;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -25,62 +26,62 @@ namespace CctvMulticastViewer
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		public MainWindow()
+		private IPAddress _multicastAddress;
+		private readonly Viewer _viewer;
+
+		public MainWindow(Viewer viewer)
 		{
 			this.InitializeComponent();
+						
+			this._viewer = viewer;
+			this.Title = $"CCTV Viewer - {this._viewer.Name}";
 
-			for(var i = 0; i < 25; i++)
+			this.ChangeLayoutCommand = new GenericCommand(this.ChangeLayoutCommandCallback);
+		}
+
+		private void ChangeLayoutCommandCallback(object parameter)
+		{
+			if(parameter is Layout layout)
 			{
-				var index = i;
-				var imgControl = this.Dispatcher.Invoke(() => this.FindName($"img{index / 5 + 1}{index % 5 + 1}") as Image);
-				var reader = new MulticastMjpegReader(
-					new IPEndPoint(IPAddress.Parse($"172.20.128.{100 + 1 + index}"), 20001),
-					new IPEndPoint(IPAddress.Parse("239.192.168.21"), 20001), 
-					(reader, ms, frameNumber) => this.DecodeFrame(imgControl, reader, ms, frameNumber));
-				Task.Run(reader.Start);
+				this.LoadLayout(layout);
 			}
 		}
 
+		public ICommand ChangeLayoutCommand { get; }
 
-		//private async Task ReadStream(int index)
-		//{
-		//	using(var client = new HttpClient())
-		//	{
-		//		var stream = await client.GetStreamAsync("http://172.20.128.51:81/mjpg/FE1/video.mjpg&w=384");
-		//		
-
-		//		var reader = new MotionJpegStreamReader(stream, (ms) =>
-		//		{
-					
-		//		});
-
-		//		await reader.ReadStream();
-		//	}
-		//}
-
-
-
-		private void DecodeFrame(Image img, MulticastMjpegReader reader, MemoryStream image, uint frameNumber)
+		protected override void OnInitialized(EventArgs e)
 		{
-			this.Dispatcher.BeginInvoke(new Action<Image, MulticastMjpegReader, MemoryStream, uint>(this.DecodeFrameInternal), DispatcherPriority.Background, img, reader, image, frameNumber);
+			base.OnInitialized(e);
+
+			Task.Run(this.LoadLayoutMenu);
+			Task.Run(() => this._multicastAddress = IPAddress.Parse(DBHelper.FetchMulticastIPAddress()));
 		}
 
-		private void DecodeFrameInternal(Image img, MulticastMjpegReader reader, MemoryStream image, uint frameNumber)
+		private async Task LoadLayoutMenu()
 		{
-			//-- Only change the image if we're on the last frame
-			if(reader.LastCompletedImage != frameNumber)
-			{
-				//System.Diagnostics.Debug.WriteLine($"Skipping frame {frameNumber}");
-				return;
-			}
+			//-- Retrieve the layouts attached to this viewer
+			var layouts = await DBHelper.FetchLayoutsAsync();
 
-			try
+			//-- Add the layouts to the context menu
+			this.Dispatcher.Invoke(() => this.ctxMenu.ItemsSource = layouts);
+		}
+
+		private void LoadLayout(Layout layout)
+		{
+			//-- Stop the existing layout
+			this.StopExistingLayout();
+
+			//-- Create the new layout
+			var control = new LayoutControl(layout, this._multicastAddress);
+			this.LayoutHolder.Content = control;
+			control.StartStreams();
+		}
+
+		private void StopExistingLayout()
+		{
+			if(this.LayoutHolder.Content is LayoutControl existingLayout)
 			{
-				img.Source = BitmapDecoder.Create(image, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None).Frames[0];
-			}
-			catch(Exception)
-			{
-				//-- Snuff the exceptions
+				existingLayout.StopStreams();
 			}
 		}
 	}
