@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CctvMulticastService.Models;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -16,12 +17,12 @@ namespace CctvMulticastService
 		private uint _currentImageID;
 		private const int BytesInDatagram = 1452;
 
-		public MulticastMjpegWriter(IPEndPoint cameraEndpoint, ILogger<Worker> _logger)
+		public MulticastMjpegWriter(IPEndPoint cameraEndpoint, Server server, ILogger<Worker> _logger)
 		{
 			this._cameraEndpoint = cameraEndpoint;
 			this._logger = _logger;
 			this._udpClient = new UdpClient(AddressFamily.InterNetwork);
-			this._udpClient.JoinMulticastGroup(cameraEndpoint.Address, IPAddress.Parse("172.20.128.51"));
+			this._udpClient.JoinMulticastGroup(cameraEndpoint.Address, IPAddress.Parse(server.SourceIPAddress));
 		}
 
 		public async Task MulticastImage(byte[] imageData)

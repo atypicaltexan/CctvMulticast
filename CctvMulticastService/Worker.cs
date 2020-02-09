@@ -34,7 +34,7 @@ namespace CctvMulticastService
 
 			//-- For each of the camera URLs start up a new camera stream
 			var cameraStreams = new List<MulticastStreamer>(cameraUrls.Select(cu => 
-				new MulticastStreamer(cu.CameraUrl, new IPEndPoint(multicastAddress, cu.MulticastPort), this._logger)));
+				new MulticastStreamer(cu.CameraUrl, server, new IPEndPoint(multicastAddress, cu.MulticastPort), this._logger)));
 
 			//-- Wait on all of the streams
 			await Task.WhenAll(cameraStreams.Select(cs => cs.Stream(stoppingToken)));
