@@ -92,7 +92,7 @@ namespace CctvMulticastViewer
 
 		public Task Start(CancellationToken token)
 		{
-			return this._reader.Start(token);
+			return Task.Run(() => this._reader.Start(token), token);
 		}
 
 		public void Stop()

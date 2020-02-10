@@ -20,6 +20,7 @@ namespace CctvMulticastViewer
 		private MemoryStream[] _streams;
 		private const int StreamCacheCount = 50;
 		private static readonly TimeSpan _timeoutInterval = TimeSpan.FromSeconds(10);
+		private ManualResetEvent _listeningWaitHandle = new ManualResetEvent(initialState: false);
 
 		public uint LastCompletedImage { get; private set; }
 		public Action TimeoutCallback { get; set; }
@@ -40,93 +41,105 @@ namespace CctvMulticastViewer
 
 		public void Stop()
 		{
-			this._client?.Dispose();
+			this._listeningWaitHandle.WaitOne();
+			this._client.DropMulticastGroup(this._cameraEndpoint.Address);
+			this._client?.Client?.Close();
+			this._client?.Close();
 		}
 
 		public async Task Start(CancellationToken stoppingToken)
 		{
-			this.SetupClient();
-
-			var lastImageNumber = (uint)0;
-			var chunksRead = (ushort)0;
-			MemoryStream currentStream = null;
-
-			//-- Loop while receiving packets
-			while(!stoppingToken.IsCancellationRequested)
+			try
 			{
-				try
+				this._listeningWaitHandle.Reset();
+				this.SetupClient();
+
+				var lastImageNumber = (uint)0;
+				var chunksRead = (ushort)0;
+				MemoryStream currentStream = null;
+
+				//-- Loop while receiving packets
+				while(!stoppingToken.IsCancellationRequested)
 				{
-					//-- Get the next datagram
-					var receiveTask = this._client.ReceiveAsync();
-					await Task.WhenAny(receiveTask, Task.Delay(_timeoutInterval));
-
-					//-- See if the socket completed
-					if(receiveTask.Status == TaskStatus.RanToCompletion)
+					try
 					{
-						var datagram = receiveTask.Result.Buffer;
+						//-- Get the next datagram
+						var receiveTask = this._client.ReceiveAsync();
+						await Task.WhenAny(receiveTask, Task.Delay(_timeoutInterval));
 
-						//-- Read the header
-						var imageNumber = (uint)(datagram[0] << 24)
-							+ (uint)(datagram[1] << 16)
-							+ (uint)(datagram[2] << 8)
-							+ datagram[3];
-						var chunkNumber = (ushort)(datagram[4] << 8) + datagram[5];
-						var chunkCount = (ushort)(datagram[6] << 8) + datagram[7];
-
-						//-- If this is a new image number, then start the new stream
-						if(imageNumber > lastImageNumber /* only check forward, in case packets arrive out of order */)
+						//-- See if the socket completed
+						if(receiveTask.Status == TaskStatus.RanToCompletion)
 						{
-							//-- Get the stream reference
-							currentStream = this._streams[lastImageNumber % StreamCacheCount];
+							var datagram = receiveTask.Result.Buffer;
 
-							//-- Clear the stream
-							currentStream.SetLength(0);
+							//-- Read the header
+							var imageNumber = (uint)(datagram[0] << 24)
+								+ (uint)(datagram[1] << 16)
+								+ (uint)(datagram[2] << 8)
+								+ datagram[3];
+							var chunkNumber = (ushort)(datagram[4] << 8) + datagram[5];
+							var chunkCount = (ushort)(datagram[6] << 8) + datagram[7];
 
-							//-- Save off the image number
-							lastImageNumber = imageNumber;
+							//-- If this is a new image number, then start the new stream
+							if(imageNumber > lastImageNumber /* only check forward, in case packets arrive out of order */)
+							{
+								//-- Get the stream reference
+								currentStream = this._streams[lastImageNumber % StreamCacheCount];
 
-							//-- Reset the chunks read
-							chunksRead = 0;
+								//-- Clear the stream
+								currentStream.SetLength(0);
+
+								//-- Save off the image number
+								lastImageNumber = imageNumber;
+
+								//-- Reset the chunks read
+								chunksRead = 0;
+							}
+
+							//-- Write the chunk to the stream
+							if(imageNumber == lastImageNumber)
+							{
+								currentStream.Write(datagram, 8, datagram.Length - 8);
+								chunksRead++;
+							}
+
+							//-- If this is the last chunk, then send the image up
+							if(chunkNumber == chunkCount - 1 && chunksRead == chunkCount)
+							{
+								currentStream.Position = 0;
+								this.LastCompletedImage = lastImageNumber;
+								this._imageReceivedCallback?.Invoke(this, currentStream, lastImageNumber);
+							}
 						}
-
-						//-- Write the chunk to the stream
-						if(imageNumber == lastImageNumber)
+						else
 						{
-							currentStream.Write(datagram, 8, datagram.Length - 8);
-							chunksRead++;
-						}
+							//-- Invoke the timeout callback
+							this.TimeoutCallback?.Invoke();
 
-						//-- If this is the last chunk, then send the image up
-						if(chunkNumber == chunkCount - 1 && chunksRead == chunkCount)
-						{
-							currentStream.Position = 0;
-							this.LastCompletedImage = lastImageNumber;
-							this._imageReceivedCallback?.Invoke(this, currentStream, lastImageNumber);
+							//-- Timed out waiting for data, so kill the socket and create a new one
+							this._client.Close();
+							this.SetupClient();
+
+							//-- Let it loop and try again
 						}
 					}
-					else
+					catch(Exception)
 					{
-						//-- Invoke the timeout callback
-						this.TimeoutCallback?.Invoke();
-
-						//-- Timed out waiting for data, so kill the socket and create a new one
-						this._client.Close();
-						this.SetupClient();
-
-						//-- Let it loop and try again
+						//-- Snuff the exception because the reader is shutting down
 					}
 				}
-				catch(Exception)
-				{
-					//-- Snuff the exception because the reader is shutting down
-				}
+			}
+			finally
+			{
+				//-- Flag the wait handle as no longer listening
+				this._listeningWaitHandle.Set();
 			}
 		}
 
 		private void SetupClient()
 		{
 			this._client = new UdpClient(this._localEndpoint);
-
+			
 			//-- Bind to the multicast address
 			this._client.JoinMulticastGroup(this._cameraEndpoint.Address);
 		}
