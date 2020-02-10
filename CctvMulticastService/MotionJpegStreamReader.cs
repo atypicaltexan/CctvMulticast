@@ -25,17 +25,21 @@ namespace CctvMulticastService
 		{
 			while(!this._cancellationToken.IsCancellationRequested)
 			{
-				//-- Start by reading off the boundary for the image
-				var boundary = this.ReadLine();
+				var contentLength = 0;
+				for(var i = 0; i < 10; i++) //-- Cap our header checks at 10
+				{
+					var line = this.ReadLine();
+					if(line.StartsWith("Content-Length"))
+					{
+						//-- Parse off the int
+						contentLength = int.Parse(line.Split(": ")[1]);
 
-				//-- Read off the content type
-				var contentType = this.ReadLine();
+						//-- Read the next blank line
+						this.ReadLine();
 
-				//-- Read off the content length
-				var contentLength = int.Parse(this.ReadLine().Split(": ")[1]);
-
-				//-- Read off the extra newline
-				this.ReadLine();
+						break;
+					}
+				}
 
 				//-- Read off the next image into a memory stream
 				var imageStream = await this.ReadNextImage(contentLength);
