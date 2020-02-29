@@ -16,7 +16,10 @@ namespace CctvMulticastViewer
 		public static void Main(string[] args)
 		{
 			//-- Make sure there is not already a copy running
-			TryKillOtherInstances();
+			if(!TryKillOtherInstances())
+			{
+				return;
+			}
 
 			//-- Read the config file
 			try
@@ -86,7 +89,7 @@ namespace CctvMulticastViewer
 				}
 				else
 				{
-					//-- User chose ot not open this copy
+					//-- User chose not not open this copy
 					return false;
 				}
 			}

@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace CctvMulticastService
 {
-	public class MotionJpegStreamReader
+	public class MotionJpegStreamReader :
+		IDisposable
 	{
 		private Stream _stream;
 		private Func<byte[], Task> _imageReadCallback;
@@ -39,6 +40,12 @@ namespace CctvMulticastService
 
 						break;
 					}
+				}
+
+				if(contentLength == 0)
+				{
+					//-- Close down this reader because there is no image coming across the stream
+					return;
 				}
 
 				//-- Read off the next image into a memory stream
@@ -90,6 +97,18 @@ namespace CctvMulticastService
 			}
 
 			return Encoding.UTF8.GetString(bytes.ToArray());
+		}
+
+		public void Dispose()
+		{
+			try
+			{
+				(this._stream as IDisposable)?.Dispose();
+			}
+			catch(Exception)
+			{
+				//-- Snuff it
+			}
 		}
 	}
 }

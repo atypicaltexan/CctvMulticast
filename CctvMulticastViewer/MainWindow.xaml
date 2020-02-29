@@ -6,6 +6,8 @@
         xmlns:local="clr-namespace:CctvMulticastViewer"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800"
+		  ResizeMode="NoResize"
+		  WindowStyle="None"
 		  WindowState="Maximized">
 	
 	<Window.Resources>
@@ -14,14 +16,12 @@
 	
 	<Grid Background="Transparent">
 		<Grid.ContextMenu>
-			<ContextMenu x:Name="ctxMenu" >
-				<ContextMenu.ItemContainerStyle>
-					<Style TargetType="{x:Type MenuItem}" >
-						<Setter Property="Header" Value="{Binding Description}" />
-						<Setter Property="Command" Value="{Binding ChangeLayoutCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
-						<Setter Property="CommandParameter" Value="{Binding}" />
-					</Style>
-				</ContextMenu.ItemContainerStyle>
+			<ContextMenu x:Name="ctxMenu">
+				<MenuItem FontWeight="Bold" />
+				<Separator />
+				<MenuItem Click="Minimize_Click" Header="Minimize" />
+				<MenuItem Click="Close_Click" Header="Close" />
+				<Separator />
 			</ContextMenu>
 		</Grid.ContextMenu>
 		<TextBlock Text="Right-click to choose layout" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="26" 
