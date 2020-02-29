@@ -71,10 +71,10 @@ namespace CctvMulticastService
 					var stream = await client.GetStreamAsync(this._cameraUrl);
 
 					//-- Create the new multicast writer
-					var writer = new MulticastMjpegWriter(this._multicastEndpoint, this._server, this._logger);
+					using var writer = new MulticastMjpegWriter(this._multicastEndpoint, this._server, this._logger);
 
 					//-- Create the new reader to read in the stream and pass each image to the writer callback
-					var reader = new MotionJpegStreamReader(stream, writer.MulticastImage, stoppingToken);
+					using var reader = new MotionJpegStreamReader(stream, writer.MulticastImage, stoppingToken);
 
 					//-- Read in and write out
 					await reader.ReadStream();

@@ -27,24 +27,13 @@ namespace CctvMulticastViewer
 	public partial class MainWindow : Window
 	{
 		private IPAddress _multicastAddress;
-		private readonly Viewer _viewer;
+		private Viewer _viewer;
 
 		public MainWindow(Viewer viewer)
 		{
-			this.InitializeComponent();
-						
 			this._viewer = viewer;
-			this.Title = $"CCTV Viewer - {this._viewer.Name}";
 
-			this.ChangeLayoutCommand = new GenericCommand(this.ChangeLayoutCommandCallback);
-		}
-
-		private void ChangeLayoutCommandCallback(object parameter)
-		{
-			if(parameter is Layout layout)
-			{
-				this.LoadLayout(layout);
-			}
+			this.InitializeComponent();
 		}
 
 		public ICommand ChangeLayoutCommand { get; }
@@ -53,6 +42,7 @@ namespace CctvMulticastViewer
 		{
 			base.OnInitialized(e);
 
+			(this.ctxMenu.Items[0] as MenuItem).Header = this._viewer.Name;
 			Task.Run(this.LoadLayoutMenu);
 			Task.Run(() => this._multicastAddress = IPAddress.Parse(DBHelper.FetchMulticastIPAddress()));
 		}
@@ -63,7 +53,27 @@ namespace CctvMulticastViewer
 			var layouts = await DBHelper.FetchLayoutsAsync();
 
 			//-- Add the layouts to the context menu
-			this.Dispatcher.Invoke(() => this.ctxMenu.ItemsSource = layouts);
+			this.Dispatcher.Invoke(() =>
+			{
+				foreach(var layout in layouts)
+				{
+					var menuItem = new MenuItem {
+						DataContext = layout,
+						Header = layout.Description,
+					};
+					menuItem.Click += this.ChangeLayout_Click;
+					this.ctxMenu.Items.Add(menuItem);
+				}
+			});
+		}
+
+		private void ChangeLayout_Click(object sender, RoutedEventArgs e)
+		{
+			if(sender is MenuItem menuItem 
+				&& menuItem.DataContext is Layout layout)
+			{
+				this.LoadLayout(layout);
+			}
 		}
 
 		private void LoadLayout(Layout layout)
@@ -83,6 +93,16 @@ namespace CctvMulticastViewer
 			{
 				existingLayout.StopStreams();
 			}
+		}
+
+		private void Minimize_Click(object sender, RoutedEventArgs e)
+		{
+			this.WindowState = WindowState.Minimized;
+		}
+
+		private void Close_Click(object sender, RoutedEventArgs e)
+		{
+			this.Close();
 		}
 	}
 }

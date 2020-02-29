@@ -34,8 +34,7 @@ namespace CctvMulticastViewer
 			//-- Create the border, image, and reader and add them to the collections
 			this.Child = this._image = new Image();
 			this.Background = Brushes.Gray;
-			this.Margin = new Thickness(2);
-			this.Padding = new Thickness(2);
+			this.Margin = new Thickness(1);
 
 			Grid.SetRow(this, camera.RowIndex - 1);
 			Grid.SetRowSpan(this, camera.RowSpan);

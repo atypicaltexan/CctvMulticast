@@ -9,7 +9,8 @@ using System.Threading.Tasks;
 
 namespace CctvMulticastService
 {
-	internal class MulticastMjpegWriter
+	internal class MulticastMjpegWriter :
+		IDisposable
 	{
 		private readonly IPEndPoint _cameraEndpoint;
 		private readonly ILogger<Worker> _logger;
@@ -23,6 +24,9 @@ namespace CctvMulticastService
 			this._logger = _logger;
 			this._udpClient = new UdpClient(AddressFamily.InterNetwork);
 			this._udpClient.JoinMulticastGroup(cameraEndpoint.Address, IPAddress.Parse(server.SourceIPAddress));
+#if DEBUG
+			this._udpClient.MulticastLoopback = true;
+#endif
 		}
 
 		public async Task MulticastImage(byte[] imageData)
@@ -37,10 +41,10 @@ namespace CctvMulticastService
 			var chunkCount = (ushort)Math.Ceiling((decimal)imageLength / BytesInDatagram);
 
 			this._currentImageID++;
-			//if(this._currentImageID % 25 == 0)
-			//{
-			//	this._logger.LogInformation("Image Size: " + imageData.Length.ToString("N0"));
-			//}
+			if(this._currentImageID % 25 == 0)
+			{
+				this._logger.LogInformation("Image Size: " + imageData.Length.ToString("N0"));
+			}
 
 			unchecked
 			{
@@ -67,6 +71,11 @@ namespace CctvMulticastService
 					await this._udpClient.SendAsync(dataGram, dataGramLength + 8, this._cameraEndpoint);
 				}
 			}
+		}
+
+		public void Dispose()
+		{
+			(this._udpClient as IDisposable)?.Dispose();
 		}
 	}
 }

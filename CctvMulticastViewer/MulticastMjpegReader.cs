@@ -19,7 +19,7 @@ namespace CctvMulticastViewer
 		private readonly ImageReceivedHandler _imageReceivedCallback;
 		private MemoryStream[] _streams;
 		private const int StreamCacheCount = 50;
-		private static readonly TimeSpan _timeoutInterval = TimeSpan.FromSeconds(10);
+		private static readonly TimeSpan _timeoutInterval = TimeSpan.FromSeconds(5);
 		private ManualResetEvent _listeningWaitHandle = new ManualResetEvent(initialState: false);
 
 		public uint LastCompletedImage { get; private set; }
@@ -119,6 +119,9 @@ namespace CctvMulticastViewer
 							//-- Timed out waiting for data, so kill the socket and create a new one
 							this._client.Close();
 							this.SetupClient();
+
+							//-- Reset back to image 0 so the new server can start over at 0
+							lastImageNumber = 0;
 
 							//-- Let it loop and try again
 						}
