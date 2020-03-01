@@ -19,7 +19,7 @@ namespace CctvMulticastViewer
 	{
 		private MulticastMjpegReader _reader;
 		private Image _image;
-		private TextBlock _timeoutMessage;
+		private Grid _timeoutMessage;
 		private bool _isTimedOut;
 		private readonly LayoutCamera _camera;
 		private IPEndPoint _localEndPoint;
@@ -63,7 +63,12 @@ namespace CctvMulticastViewer
 			//-- Create the label if needed
 			if(this._timeoutMessage == null)
 			{
-				this._timeoutMessage = new TextBlock {
+				this._timeoutMessage = new Grid();
+				this._timeoutMessage.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+				this._timeoutMessage.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+				this._timeoutMessage.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+				var textblock = new TextBlock {
 					HorizontalAlignment = HorizontalAlignment.Center,
 					FontSize = 24,
 					FontWeight = FontWeights.Bold,
@@ -71,15 +76,22 @@ namespace CctvMulticastViewer
 					TextAlignment = TextAlignment.Center,
 					VerticalAlignment = VerticalAlignment.Center,
 				};
-				this._timeoutMessage.Inlines.Add(new Run {
+				textblock.Inlines.Add(new Run {
 					Text = this._camera.Camera.Name,
 				});
-				this._timeoutMessage.Inlines.Add(new LineBreak());
-				this._timeoutMessage.Inlines.Add(new Run {
+				textblock.Inlines.Add(new LineBreak());
+				textblock.Inlines.Add(new Run {
 					FontWeight = FontWeights.Normal,
 					Foreground = Brushes.DarkGray,
 					Text = "no video available",
 				});
+
+				var viewbox = new Viewbox {
+					Child = textblock,
+					Stretch = Stretch.Uniform,
+				};
+				Grid.SetRow(viewbox, 1);
+				this._timeoutMessage.Children.Add(viewbox);
 			}
 
 			//-- Set the child if needed
