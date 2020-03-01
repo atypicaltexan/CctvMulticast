@@ -83,8 +83,11 @@ namespace CctvMulticastService
 				{
 					//-- Log the error and delay, then loop and try again
 					this._logger.LogError(ex.Message + Environment.NewLine + ex.StackTrace);
-					await Task.Delay(TimeSpan.FromMinutes(.5));
 				}
+				
+				//-- Wait for a delay before looping (moved outside of the catch for when the client does not throw an exception nor open an
+				//   never-ending stream
+				await Task.Delay(TimeSpan.FromMinutes(.5), stoppingToken);
 			}
 		}
 	}
