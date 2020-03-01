@@ -43,7 +43,7 @@ namespace CctvMulticastService
 			using var client = new HttpClient();
 			var request = new HttpRequestMessage {
 				Method = HttpMethod.Post,
-				RequestUri = new Uri("http://10.192.168.21/webcam_login"),
+				RequestUri = new Uri("http://172.10.10.14/webcam_login"),
 				Content = new FormUrlEncodedContent(new[] {
 					 new KeyValuePair<string, string> ("id", "video"),
 					 new KeyValuePair<string, string> ("pwd", "video"),
