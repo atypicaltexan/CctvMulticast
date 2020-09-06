@@ -10,5 +10,6 @@ namespace CctvMulticastViewer.Models
 		public string Name { get; set; }
 		public string Location { get; set; }
 		public int MulticastPort { get; set; }
+		public string QuickLabel { get; set; }
 	}
 }

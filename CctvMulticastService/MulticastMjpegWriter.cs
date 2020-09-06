@@ -41,10 +41,12 @@ namespace CctvMulticastService
 			var chunkCount = (ushort)Math.Ceiling((decimal)imageLength / BytesInDatagram);
 
 			this._currentImageID++;
+#if DEBUG
 			if(this._currentImageID % 25 == 0)
 			{
 				this._logger.LogInformation("Image Size: " + imageData.Length.ToString("N0"));
 			}
+#endif
 
 			unchecked
 			{

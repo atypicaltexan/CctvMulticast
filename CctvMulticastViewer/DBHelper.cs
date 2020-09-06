@@ -15,6 +15,15 @@ namespace CctvMulticastViewer
          DataConnection.DefaultSettings = new MySettings();
 		}
 
+		public static Camera FetchCameraByID(int cameraID)
+		{
+			using var db = new Cctv();
+			return (
+				from c in db.Camera
+				where c.ID == cameraID
+				select c).FirstOrDefault();
+		}
+
 		public static string FetchMulticastIPAddress()
 		{
 			using var db = new Cctv();
@@ -54,6 +63,17 @@ namespace CctvMulticastViewer
 				where lc.LayoutID == layoutID
 				orderby lc.RowIndex, lc.ColumnIndex
 				select LayoutCamera.WithCamera(lc, c)).ToArray();
+		}
+
+		public static LayoutCameraUserChoice[] FetchUserChoiceForLayout(int layoutID)
+		{
+			using var db = new Cctv();
+
+			return (
+				from lcuc in db.LayoutCameraUserChoice
+				from c in db.Camera.InnerJoin(c => lcuc.OptionalCameraID == c.ID)
+				where lcuc.LayoutID == layoutID
+				select LayoutCameraUserChoice.WithCamera(lcuc, c)).ToArray();
 		}
 	}
 }

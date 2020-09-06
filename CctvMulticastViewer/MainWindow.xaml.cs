@@ -1,5 +1,6 @@
 ﻿using CctvMulticastViewer.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -28,6 +29,7 @@ namespace CctvMulticastViewer
 	{
 		private IPAddress _multicastAddress;
 		private Viewer _viewer;
+		private Control[] _contextMenuItems;
 
 		public MainWindow(Viewer viewer)
 		{
@@ -64,6 +66,9 @@ namespace CctvMulticastViewer
 					menuItem.Click += this.ChangeLayout_Click;
 					this.ctxMenu.Items.Add(menuItem);
 				}
+
+				//-- Save off the default menu items
+				this._contextMenuItems = this.ctxMenu.Items.OfType<Control>().ToArray();
 			});
 		}
 
@@ -103,6 +108,92 @@ namespace CctvMulticastViewer
 		private void Close_Click(object sender, RoutedEventArgs e)
 		{
 			this.Close();
+		}
+
+		private void ContextMenu_Opening(object sender, ContextMenuEventArgs e)
+		{
+			var itemsList = new List<Control>(this._contextMenuItems);
+
+			var result = VisualTreeHelper.HitTest(this, new Point(e.CursorLeft, e.CursorTop));
+
+			if(this.FindLayoutSlot(result.VisualHit) is LayoutSlot slot
+				&& slot.CanUserChooseCamera)
+			{
+				this.AddSwapCameraMenuItems(itemsList, slot);
+				this.AddCycleCameraMenuItems(itemsList, slot);
+			}
+
+			this.ctxMenu.Items.Clear();
+			foreach(var item in itemsList)
+			{
+				this.ctxMenu.Items.Add(item);
+			}
+		}
+
+		private void AddCycleCameraMenuItems(List<Control> itemsList, LayoutSlot slot)
+		{
+			itemsList.Add(new Separator());
+			
+			//-- Add the context menu items
+			var menuItem = new MenuItem {
+				Header = "Cycle Options",
+			};
+			itemsList.Add(menuItem);
+
+			foreach(var optionalCamera in slot.OptionalCameras)
+			{
+				var chooseItem = new MenuItem {
+					Header = optionalCamera.Camera.Name,
+					Tag = optionalCamera,
+					IsCheckable = true,
+					IsChecked = slot.CyclingImages.Any(i => i.Camera.ID == optionalCamera.OptionalCameraID),
+				};
+
+				chooseItem.Click += (sender, e) =>
+				{
+					slot.ToggleCycleCamera(optionalCamera);
+				};
+
+				menuItem.Items.Add(chooseItem);
+			}
+		}
+
+		private void AddSwapCameraMenuItems(List<Control> itemsList, LayoutSlot slot)
+		{
+			//-- Add the context menu items
+			var menuItem = new MenuItem {
+				Header = "Swap this camera",
+			};
+			itemsList.Add(new Separator());
+			itemsList.Add(menuItem);
+			foreach(var optionalCamera in slot.OptionalCameras)
+			{
+				var swapItem = new MenuItem {
+					Header = optionalCamera.Camera.Name,
+					Tag = optionalCamera,
+				};
+				swapItem.Click += (sender, e) =>
+				{
+					if(this.LayoutHolder.Content is LayoutControl existingLayout)
+					{
+						existingLayout.SwapCamera(slot, optionalCamera);
+					}
+				};
+
+				menuItem.Items.Add(swapItem);
+			}
+		}
+
+		private LayoutSlot FindLayoutSlot(DependencyObject visualHit)
+		{
+			var current = visualHit;
+
+			while(current != null && !(current is LayoutSlot))
+			{
+				current = VisualTreeHelper.GetParent(current);
+			}
+
+			return current as LayoutSlot;
 		}
 	}
 }

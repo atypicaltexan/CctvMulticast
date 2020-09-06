@@ -20,12 +20,19 @@ namespace CctvMulticastService
 
 		public static IHostBuilder CreateHostBuilder(string[] args)
 		{
-			return Host
+			var builder = Host
 				.CreateDefaultBuilder(args)
 				.ConfigureServices((hostContext, services) =>
 				{
 					services.AddHostedService<Worker>();
 				});
+
+			if(args.Length > 0 && args[0] == "svc")
+			{
+				return builder.UseWindowsService();
+			}
+
+			return builder;
 		}
 	}
 }

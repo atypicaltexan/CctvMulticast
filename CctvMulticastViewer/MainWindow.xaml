@@ -14,7 +14,7 @@
 		<local:NullVisibilityConverter x:Key="Converter_NtV" />
 	</Window.Resources>
 	
-	<Grid Background="Transparent">
+	<Grid Background="Transparent" ContextMenuOpening="ContextMenu_Opening">
 		<Grid.ContextMenu>
 			<ContextMenu x:Name="ctxMenu">
 				<MenuItem FontWeight="Bold" />

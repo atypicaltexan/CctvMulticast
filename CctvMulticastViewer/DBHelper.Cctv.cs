@@ -13,6 +13,7 @@ namespace CctvMulticastViewer
 			public ITable<Camera> Camera => this.GetTable<Camera>();
 			public ITable<Layout> Layout => this.GetTable<Layout>();
 			public ITable<LayoutCamera> LayoutCamera => this.GetTable<LayoutCamera>();
+			public ITable<LayoutCameraUserChoice> LayoutCameraUserChoice => this.GetTable<LayoutCameraUserChoice>();
 			public ITable<Settings> Settings => this.GetTable<Settings>();
 			public ITable<Viewer> Viewer => this.GetTable<Viewer>();
 			public ITable<ViewerLayout> ViewerLayout => this.GetTable<ViewerLayout>();

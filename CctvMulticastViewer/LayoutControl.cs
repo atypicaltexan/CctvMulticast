@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -19,7 +20,8 @@ namespace CctvMulticastViewer
 		private Layout _layout;
 		private readonly IPAddress _multicastAddress;
 		private CancellationTokenSource _stoppingTokenSource;
-		private List<LayoutImage> _images = new List<LayoutImage>();
+		private List<LayoutSlot> _slots = new List<LayoutSlot>();
+		private Timer _cycleCamerasTimer;
 
 		public LayoutControl(Layout layout, IPAddress multicastAddress)
 		{
@@ -29,6 +31,7 @@ namespace CctvMulticastViewer
 
 			//-- Retrieve the cameras in the layout
 			var cameras = DBHelper.FetchCamerasForLayout(layout.ID);
+			var optionalCameras = DBHelper.FetchUserChoiceForLayout(layout.ID);
 
 			//-- Set the row and column definitions
 			for(var i = 0; i < this._layout.Rows; i++)
@@ -47,26 +50,39 @@ namespace CctvMulticastViewer
 			//-- Add the images
 			foreach(var camera in cameras)
 			{
-				//-- Create the image
-				var image = new LayoutImage(
-					camera,
-					new IPEndPoint(IPAddress.Any, camera.Camera.MulticastPort),
-					new IPEndPoint(this._multicastAddress, camera.Camera.MulticastPort));
+				//-- Set the optional cameras for the camera
+				camera.UserChoices.AddRange(optionalCameras.Where(oc => oc.CameraID == camera.CameraID).OrderBy(oc => oc.Camera.Name));
 
-				this._images.Add(image);
-				this.Children.Add(image);
+				//-- Create the slot for the camera
+				var slot = new LayoutSlot(this._multicastAddress);
+				slot.OriginalCamera = camera;
+				Grid.SetRow(slot, camera.RowIndex - 1);
+				Grid.SetRowSpan(slot, camera.RowSpan);
+				Grid.SetColumn(slot, camera.ColumnIndex - 1);
+				Grid.SetColumnSpan(slot, camera.ColumnSpan);
+				slot.CreateInitialImages();
+
+				this._slots.Add(slot);
+				this.Children.Add(slot);
 			}
+		}
+
+		public void SwapCamera(LayoutSlot slot, LayoutCameraUserChoice newCamera)
+		{
+			slot.SwapCamera(newCamera);
 		}
 
 		public void StopStreams()
 		{
+			this._cycleCamerasTimer.Dispose();
+
 			//-- Set the cancellation token to cancelled and dispose of the streams
 			this._stoppingTokenSource.Cancel();
 
 			//-- Dispose of the clients
-			foreach(var image in this._images)
+			foreach(var slot in this._slots)
 			{
-				image.Stop();
+				slot.Stop();
 			}
 		}
 
@@ -75,10 +91,25 @@ namespace CctvMulticastViewer
 			//-- Create the new cancellation token and start receiving images
 			this._stoppingTokenSource = new CancellationTokenSource();
 
-			foreach(var image in this._images)
+			foreach(var slot in this._slots)
 			{
-				_ = image.Start(this._stoppingTokenSource.Token);
+				slot.StartImages(this._stoppingTokenSource.Token);
 			}
+
+			var cycleTime = Config.Instance.CycleCameraTime ?? TimeSpan.FromSeconds(5);
+			this._cycleCamerasTimer = new Timer(this.CycleCameras, null, cycleTime, cycleTime);
+
+		}
+
+		private void CycleCameras(object state)
+		{
+			this.Dispatcher.BeginInvoke(new Action(() =>
+			{
+				foreach(var slot in this._slots)
+				{
+					slot.CycleNext();
+				}
+			}));
 		}
 	}
 }

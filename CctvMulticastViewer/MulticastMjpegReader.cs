@@ -17,6 +17,7 @@ namespace CctvMulticastViewer
 		private readonly IPEndPoint _localEndpoint;
 		private readonly IPEndPoint _cameraEndpoint;
 		private readonly ImageReceivedHandler _imageReceivedCallback;
+		private volatile bool _isStoppingForSwap;
 		private MemoryStream[] _streams;
 		private const int StreamCacheCount = 50;
 		private static readonly TimeSpan _timeoutInterval = TimeSpan.FromSeconds(5);
@@ -47,6 +48,12 @@ namespace CctvMulticastViewer
 			this._client?.Close();
 		}
 
+		public void StopForSwap()
+		{
+			this._isStoppingForSwap = true;
+			this.Stop();
+		}
+
 		public async Task Start(CancellationToken stoppingToken)
 		{
 			try
@@ -59,7 +66,7 @@ namespace CctvMulticastViewer
 				MemoryStream currentStream = null;
 
 				//-- Loop while receiving packets
-				while(!stoppingToken.IsCancellationRequested)
+				while(!stoppingToken.IsCancellationRequested && !this._isStoppingForSwap)
 				{
 					try
 					{

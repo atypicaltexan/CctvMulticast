@@ -20,5 +20,6 @@ namespace CctvMulticastViewer
 		public static Config Instance { get; private set; }
 		public string ConnectionString { get; set; }
 		public int ViewerID { get; set; }
+		public TimeSpan? CycleCameraTime { get; set; }
 	}
 }
